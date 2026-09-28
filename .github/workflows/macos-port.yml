@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build-macos:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     env:
       PACKAGE_VERSION: 26.0.30
     steps:
