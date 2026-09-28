@@ -59,9 +59,12 @@ customize = root / 'CustomizeMii' / 'CustomizeMii.csproj'
 text = customize.read_text(encoding='utf-8-sig')
 text = re.sub(r'\s*<ProjectReference Include="\.\\CustomizeMiiInstaller\\CustomizeMiiInstaller\.csproj">.*?</ProjectReference>', '', text, flags=re.S)
 text = re.sub(r'\s*<ProjectReference Include="\.\\ForwardMii\\ForwardMii\.csproj">.*?</ProjectReference>', '', text, flags=re.S)
+items = []
+for p in sorted((root / 'ForwardMii').glob('*.cs')):
+    if p.name != 'AssemblyInfo.cs': items.append(f'    <Compile Include="..\\ForwardMii\\{p.name}" Link="ForwardMii\\{p.name}" />')
+installer = root / 'CustomizeMiiInstaller' / 'InstallerHelper.cs'
+if installer.exists():
+    items.append('    <Compile Include="..\\CustomizeMiiInstaller\\InstallerHelper.cs" Link="CustomizeMiiInstaller\\InstallerHelper.cs" />')
 if 'Link="ForwardMii\\ForwardMii_GX.cs"' not in text:
-    items = []
-    for p in sorted((root / 'ForwardMii').glob('*.cs')):
-        if p.name != 'AssemblyInfo.cs': items.append(f'    <Compile Include="..\\ForwardMii\\{p.name}" Link="ForwardMii\\{p.name}" />')
     text = text.replace('  <ItemGroup>', '  <ItemGroup>\n' + '\n'.join(items), 1)
 customize.write_text(text, encoding='utf-8')
