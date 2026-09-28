@@ -1,0 +1,66 @@
+name: macOS port test
+
+on:
+  push:
+    branches: [macos-port]
+
+permissions:
+  contents: read
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    env:
+      PACKAGE_VERSION: 26.0.30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Prepare port
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/customizemii-port"
+          cp -a "$GITHUB_WORKSPACE" "$RUNNER_TEMP/customizemii-port"
+          cd "$RUNNER_TEMP/customizemii-port"
+          dotnet tool install --global Majorsilence.Forms.Migrator --version "$PACKAGE_VERSION"
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          majorsilence-migrate CustomizeMii.sln --no-backup
+          python3 "$GITHUB_WORKSPACE/.github/workflows/patch_macos.py" "$RUNNER_TEMP/customizemii-port"
+      - name: Restore
+        run: dotnet restore "$RUNNER_TEMP/customizemii-port/CustomizeMii/CustomizeMii.csproj"
+      - name: Build
+        run: dotnet build "$RUNNER_TEMP/customizemii-port/CustomizeMii/CustomizeMii.csproj" -c Release --no-restore
+      - name: Publish .app
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/customizemii-port"
+          rm -rf publish app dist
+          dotnet publish CustomizeMii/CustomizeMii.csproj -c Release -r osx-arm64 --self-contained true -p:UseAppHost=true -o publish
+          mkdir -p app/CustomizeMii.app/Contents/MacOS app/CustomizeMii.app/Contents/Resources
+          cp -a publish/. app/CustomizeMii.app/Contents/MacOS/
+          chmod +x app/CustomizeMii.app/Contents/MacOS/CustomizeMii
+          cat > app/CustomizeMii.app/Contents/Info.plist <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleName</key><string>CustomizeMii</string>
+  <key>CFBundleDisplayName</key><string>CustomizeMii</string>
+  <key>CFBundleIdentifier</key><string>com.nvdemu.customizemii</string>
+  <key>CFBundleExecutable</key><string>CustomizeMii</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleVersion</key><string>1.0.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+</dict></plist>
+PLIST
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent app/CustomizeMii.app dist/CustomizeMii-macOS-arm64.zip
+          hdiutil create -volname CustomizeMii -srcfolder app/CustomizeMii.app -ov -format UDZO dist/CustomizeMii-macOS-arm64.dmg
+          cp -a dist "$GITHUB_WORKSPACE/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CustomizeMii-macOS-arm64
+          path: dist/
