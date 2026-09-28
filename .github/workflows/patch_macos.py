@@ -56,15 +56,46 @@ for csproj in root.rglob('*.csproj'):
     csproj.write_text(text, encoding='utf-8')
 
 customize = root / 'CustomizeMii' / 'CustomizeMii.csproj'
-text = customize.read_text(encoding='utf-8-sig')
-text = re.sub(r'\s*<ProjectReference Include="\.\\CustomizeMiiInstaller\\CustomizeMiiInstaller\.csproj">.*?</ProjectReference>', '', text, flags=re.S)
-text = re.sub(r'\s*<ProjectReference Include="\.\\ForwardMii\\ForwardMii\.csproj">.*?</ProjectReference>', '', text, flags=re.S)
-items = []
+forward_items = []
 for p in sorted((root / 'ForwardMii').glob('*.cs')):
-    if p.name != 'AssemblyInfo.cs': items.append(f'    <Compile Include="..\\ForwardMii\\{p.name}" Link="ForwardMii\\{p.name}" />')
+    if p.name != 'AssemblyInfo.cs': forward_items.append(f'    <Compile Include="..\\ForwardMii\\{p.name}" Link="ForwardMii\\{p.name}" />')
 installer = root / 'CustomizeMiiInstaller' / 'InstallerHelper.cs'
 if installer.exists():
-    items.append('    <Compile Include="..\\CustomizeMiiInstaller\\InstallerHelper.cs" Link="CustomizeMiiInstaller\\InstallerHelper.cs" />')
-if 'Link="ForwardMii\\ForwardMii_GX.cs"' not in text:
-    text = text.replace('  <ItemGroup>', '  <ItemGroup>\n' + '\n'.join(items), 1)
-customize.write_text(text, encoding='utf-8')
+    forward_items.append('    <Compile Include="..\\CustomizeMiiInstaller\\InstallerHelper.cs" Link="CustomizeMiiInstaller\\InstallerHelper.cs" />')
+
+csproj = '''<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>CustomizeMii</AssemblyName>
+    <RootNamespace>CustomizeMii</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Majorsilence.Forms" Version="26.0.30" />
+    <PackageReference Include="Majorsilence.Forms.Avalonia" Version="26.0.30" />
+    <PackageReference Include="Majorsilence.Forms.Drawing.Common" Version="26.0.30" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="libWiiSharp">
+      <HintPath>libWiiSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+''' + '\n'.join(forward_items) + '''
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\\ForwardMii\\Resources\\**\\*.bin" LinkBase="ForwardMii\\Resources" />
+    <EmbeddedResource Include="..\\ForwardMii\\Resources\\GX\\*" LinkBase="ForwardMii\\Resources\\GX" />
+    <EmbeddedResource Include="..\\CustomizeMiiInstaller\\Resources\\CustomizeMiiInstaller.dol.z" Link="CustomizeMiiInstaller\\Resources\\CustomizeMiiInstaller.dol.z" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\\**\\*" CopyToOutputDirectory="PreserveNewest" Exclude="Resources\\**\\*.resx" />
+  </ItemGroup>
+</Project>
+'''
+customize.write_text(csproj, encoding='utf-8')
