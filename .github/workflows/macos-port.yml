@@ -42,8 +42,7 @@ jobs:
           mkdir -p app/CustomizeMii.app/Contents/MacOS app/CustomizeMii.app/Contents/Resources
           cp -a publish/. app/CustomizeMii.app/Contents/MacOS/
           chmod +x app/CustomizeMii.app/Contents/MacOS/CustomizeMii
-          cat > app/CustomizeMii.app/Contents/Info.plist <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
+          python3 -c 'from pathlib import Path; Path("app/CustomizeMii.app/Contents/Info.plist").write_text("""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>CFBundleName</key><string>CustomizeMii</string>
@@ -55,7 +54,7 @@ jobs:
   <key>CFBundleShortVersionString</key><string>1.0.0</string>
   <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
-PLIST
+""", encoding="utf-8")'
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent app/CustomizeMii.app dist/CustomizeMii-macOS-arm64.zip
           hdiutil create -volname CustomizeMii -srcfolder app/CustomizeMii.app -ov -format UDZO dist/CustomizeMii-macOS-arm64.dmg
