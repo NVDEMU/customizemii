@@ -1,2 +1,1 @@
-macOS port CI trigger test
-fixed workflow trigger
+macOS app CI trigger - cross-build
