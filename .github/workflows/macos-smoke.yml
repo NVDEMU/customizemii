@@ -1,0 +1,12 @@
+name: macOS smoke
+on:
+  push:
+    branches:
+      - macos-port
+jobs:
+  smoke:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smoke
+        run: echo "macOS runner works"
