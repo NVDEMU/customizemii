@@ -1,15 +1,15 @@
-name: macOS port test
+name: macOS app build
 
 on:
   push:
-    branches: [macos-port]
+    branches: [master, macos-port]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-macos:
-    runs-on: macos-14
+    runs-on: ubuntu-24.04
     env:
       PACKAGE_VERSION: 26.0.30
     steps:
@@ -56,10 +56,22 @@ jobs:
             '  <key>NSHighResolutionCapable</key><true/>' \
             '</dict></plist>' > app/CustomizeMii.app/Contents/Info.plist
           mkdir -p dist
-          ditto -c -k --sequesterRsrc --keepParent app/CustomizeMii.app dist/CustomizeMii-macOS-arm64.zip
-          hdiutil create -volname CustomizeMii -srcfolder app/CustomizeMii.app -ov -format UDZO dist/CustomizeMii-macOS-arm64.dmg
+          cd app
+          zip -r -y "../dist/CustomizeMii-macOS-arm64.app.zip" CustomizeMii.app
+          cd ..
           cp -a dist "$GITHUB_WORKSPACE/"
       - uses: actions/upload-artifact@v4
         with:
           name: CustomizeMii-macOS-arm64
           path: dist/
+      - name: Create GitHub release
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="macos-$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
+          gh release create "$TAG" \
+            "$GITHUB_WORKSPACE/dist/CustomizeMii-macOS-arm64.app.zip" \
+            --title "CustomizeMii macOS $TAG" \
+            --notes "Apple Silicon macOS build of the NVDEMU CustomizeMii fork. The ZIP contains a normal CustomizeMii.app bundle."
