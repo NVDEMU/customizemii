@@ -1,1 +1,1 @@
-macOS app CI trigger - cross-build
+macOS app CI trigger - installer plugin included
