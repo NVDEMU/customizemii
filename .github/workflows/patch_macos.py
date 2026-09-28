@@ -9,7 +9,10 @@ for path in root.rglob('*.cs'):
     text = text.replace('System.Windows.Forms.', 'Majorsilence.Forms.')
     text = text.replace('using System.Drawing;', 'using Majorsilence.Forms.Drawing;')
     text = text.replace('System.Drawing.Drawing2D.', 'Majorsilence.Forms.Drawing.Drawing2D.')
-    text = text.replace('System.Drawing.Imaging.', 'Majorsilence.Forms.Drawing.Imaging.')
+    text = text.replace('System.Drawing.', 'Majorsilence.Forms.Drawing.')
+    text = text.replace('Majorsilence.Forms.Drawing.Drawing2D.', 'Majorsilence.Forms.Drawing.Drawing2D.')
+    text = text.replace('Majorsilence.Forms.Drawing.Imaging.', 'Majorsilence.Forms.Drawing.Imaging.')
+    text = text.replace('Majorsilence.Forms.Drawing.Text.', 'Majorsilence.Forms.Drawing.Text.')
     text = text.replace('System.Drawing.Text.', 'Majorsilence.Forms.Drawing.Text.')
     text = text.replace('Application.StartupPath', 'AppContext.BaseDirectory')
     path.write_text(text, encoding='utf-8')
@@ -78,6 +81,8 @@ csproj = '''<Project Sdk="Microsoft.NET.Sdk">
     <PackageReference Include="Majorsilence.Forms" Version="26.0.30" />
     <PackageReference Include="Majorsilence.Forms.Avalonia" Version="26.0.30" />
     <PackageReference Include="Majorsilence.Forms.Drawing.Common" Version="26.0.30" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0" />
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="libWiiSharp">
@@ -94,7 +99,7 @@ csproj = '''<Project Sdk="Microsoft.NET.Sdk">
     <EmbeddedResource Include="..\\CustomizeMiiInstaller\\Resources\\CustomizeMiiInstaller.dol.z" Link="CustomizeMiiInstaller\\Resources\\CustomizeMiiInstaller.dol.z" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\\**\\*" CopyToOutputDirectory="PreserveNewest" Exclude="Resources\\**\\*.resx" />
+    <None Update="Resources\\**\\*" CopyToOutputDirectory="PreserveNewest" Exclude="Resources\\**\\*.resx" />
   </ItemGroup>
 </Project>
 '''
