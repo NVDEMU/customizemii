@@ -1,1 +1,1 @@
-macOS app CI trigger - installer plugin included
+macOS SDK project conversion test
